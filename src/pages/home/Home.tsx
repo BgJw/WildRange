@@ -3,9 +3,6 @@ import { Link } from "react-router-dom";
 const Home = () => {
   return (
     <div className="relative h-screen w-full overflow-hidden">
-      {/* Фон и оверлей не нужны, их рисует Layout */}
-
-      {/* Контент */}
       <div className="relative z-30 flex flex-col items-center justify-center text-center h-full px-6 text-white">
         <h1 className="text-5xl md:text-7xl font-bold mb-4">Feel the Call of the Mountains</h1>
         <p className="text-xl md:text-2xl mb-8 max-w-xl">
