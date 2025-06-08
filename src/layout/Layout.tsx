@@ -1,53 +1,107 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import mountainBg from "../assets/3.jpg";
-import aboutBg from "../assets/4.jpeg";
-import bookBg from "../assets/2.jpg";
+import { useEffect, useRef, useState } from "react";
+import aboutBg from "../assets/3.jpg";
+import way2 from "../assets/way3.jpg";
+import main from "../assets/main.png";
 
 type Backgrounds = {
   [key: string]: string;
-}
-const backgrounds: Backgrounds = {
-  "/": mountainBg,
-  "/about": aboutBg,
-  "/book": bookBg,
 };
 
+const backgrounds: Backgrounds = {
+  "/": main,
+  "/about": aboutBg,
+  "/book": aboutBg,
+  "/mountRoutes": way2,
+};
 
 const Layout = () => {
   const location = useLocation();
-  const [currentBg, setCurrentBg] = useState<string>(backgrounds[location.pathname] || mountainBg);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentBg, setCurrentBg] = useState<string>(backgrounds[location.pathname] || main);
+  const [scale, setScale] = useState(1);
+  const [blur, setBlur] = useState(0);
+  const [transitionDuration, setTransitionDuration] = useState("500ms");
+  const prevPathRef = useRef(location.pathname);
+  const scaleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    useEffect(() => {
-    const newBg = backgrounds[location.pathname] || mountainBg;
+  useEffect(() => {
+    if (location.pathname === "/") {
+      clearInterval(scaleIntervalRef.current!);
+      setTransitionDuration("20000ms");
+      setScale(1);
 
-    if (newBg !== currentBg) {
+      let scaleVal = 1;
+      scaleIntervalRef.current = setInterval(() => {
+        scaleVal = Math.min(scaleVal + 0.01, 1.2);
+        setScale(scaleVal);
+      }, 200);
 
-      setIsTransitioning(true);
+      setTimeout(() => {
+        clearInterval(scaleIntervalRef.current!);
+      }, 3000);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const newBg = backgrounds[location.pathname] || main;
+    const prevPath = prevPathRef.current;
+    const fromHome = prevPath === "/";
+    const toHome = location.pathname === "/";
+
+    if (fromHome && !toHome) {
+      setScale(1.5);
+      setBlur(8);
+      setTransitionDuration("500ms");
 
       const timeout = setTimeout(() => {
-        setIsTransitioning(false);
         setCurrentBg(newBg);
+        setScale(1);
+        setBlur(0);
       }, 500);
 
+      prevPathRef.current = location.pathname;
       return () => clearTimeout(timeout);
     }
-  }, [location.pathname]); 
 
- return (
+    if (!fromHome && !toHome) {
+      setBlur(8);
+      setTransitionDuration("500ms");
+
+      const timeout = setTimeout(() => {
+        setCurrentBg(newBg);
+        setBlur(0);
+      }, 500);
+
+      prevPathRef.current = location.pathname;
+      return () => clearTimeout(timeout);
+    }
+
+if (toHome) {
+  setTransitionDuration("20000ms");
+  setBlur(8);
+
+  const timeout = setTimeout(() => {
+      setCurrentBg(newBg);
+      setBlur(0);
+    }, 500);
+
+  prevPathRef.current = location.pathname;
+  return () => clearTimeout(timeout);
+}
+
+  }, [location.pathname]);
+
+  return (
     <div className="relative min-h-screen w-full overflow-hidden">
-
       <div
-        className={`fixed inset-0 bg-cover bg-center z-0 transition-opacity duration-500 ease-in-out`}
+        className="fixed inset-0 bg-cover bg-center z-0 transition-transform ease-out"
         style={{
           backgroundImage: `url(${currentBg})`,
-          filter: isTransitioning ? "blur(6px)" : "blur(0px)",
-          opacity: isTransitioning ? 0.25 : 1,
+          filter: `blur(${blur}px)`,
+          transform: `scale(${scale})`,
+          transitionDuration,
         }}
       />
-
-      <div className="fixed inset-0 bg-black/30 z-10" />
 
       <main className="relative z-20 min-h-screen">
         <Outlet />
